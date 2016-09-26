@@ -5,11 +5,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,17 +14,6 @@ import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,32 +21,35 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks,
-        LocationListener{
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
     private boolean active;
     private BroadcastReceiver broadcastReceiver;
-    private static final String LOGTAG = "android-localizacion";
+    private static final String LOGTAG = "android-location";
 
-    private static final int PETICION_PERMISO_LOCALIZACION = 101;
-    private static final int PETICION_CONFIG_UBICACION = 201;
+    private static final int REQUEST_TO_LOCALIZATION_DEVICE = 101;
+    private static final int REQUEST_CONFIG_LOCATION = 201;
 
-    private LocationRequest locRequest;
-
-    private GoogleApiClient apiClient;
 
     @Override
     public void onResume()
     {
         super.onResume();
+
+        //Return from GPS Network Tracker localization info
         if(broadcastReceiver == null){
             broadcastReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
 
+                    System.out.println("Datos recibidos...");
+
+                    changeMarker(Double.parseDouble(intent.getExtras().get("lat").toString()),
+                            Double.parseDouble(intent.getExtras().get("lng").toString()), "My location");
                     Toast.makeText(MapsActivity.this, intent.getExtras().get("coordinates").toString(), Toast.LENGTH_LONG).show();
+                    System.out.println("Current location " + intent.getExtras().get("coordinates").toString());
+
 
                 }
             };
@@ -83,21 +72,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                active = !active;
-                toggleLocationUpdates(active);
+
+                //Check localization permission
+                if (ActivityCompat.checkSelfPermission(MapsActivity.this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                    updateButton.setChecked(false);
+                    ActivityCompat.requestPermissions(MapsActivity.this,
+                            new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                            REQUEST_TO_LOCALIZATION_DEVICE);
+                } else {
+
+                    active = !active;
+                    toggleLocationUpdates(active);
+                }
+
             }
         });
-
-        //Construcción cliente API Google
-        apiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addConnectionCallbacks(this)
-                .addApi(LocationServices.API)
-                .build();
-
 
     }
 
@@ -106,11 +101,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         Intent intent = new Intent(MapsActivity.this, GPSNetworkTracker.class);
         if (enable) {
 
-            enableLocationUpdates();
-            //startService(intent);
+            //enableLocationUpdates();
+            startService(intent);
+
+            Toast.makeText(MapsActivity.this, "Buscando localizaciones...", Toast.LENGTH_LONG).show();
         } else {
-            //stopService(intent);
-            disableLocationUpdates();
+            stopService(intent);
+            //disableLocationUpdates();
+            Toast.makeText(MapsActivity.this, "Dejando de buscar localizaciones...", Toast.LENGTH_LONG).show();
         }
 
     }
@@ -149,126 +147,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    private void enableLocationUpdates() {
-
-        locRequest = new LocationRequest();
-        locRequest.setInterval(2000);
-        locRequest.setFastestInterval(1000);
-        locRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest locSettingsRequest =
-                new LocationSettingsRequest.Builder()
-                        .addLocationRequest(locRequest)
-                        .build();
-
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(
-                        apiClient, locSettingsRequest);
-
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @Override
-            public void onResult(LocationSettingsResult locationSettingsResult) {
-                final Status status = locationSettingsResult.getStatus();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-
-                        Log.i(LOGTAG, "Configuración correcta");
-                        startLocationUpdates();
-
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        try {
-                            Log.i(LOGTAG, "Se requiere actuación del usuario");
-                            status.startResolutionForResult(MapsActivity.this, PETICION_CONFIG_UBICACION);
-                        } catch (IntentSender.SendIntentException e) {
-
-                            Log.i(LOGTAG, "Error al intentar solucionar configuración de ubicación");
-                        }
-
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        Log.i(LOGTAG, "No se puede cumplir la configuración de ubicación necesaria");
-
-                        break;
-                }
-            }
-        });
-    }
-
-    private void disableLocationUpdates() {
-
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                apiClient, this);
-
-    }
-
-    private void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(MapsActivity.this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-            //Ojo: estamos suponiendo que ya tenemos concedido el permiso.
-            //Sería recomendable implementar la posible petición en caso de no tenerlo.
-
-            Log.i(LOGTAG, "Inicio de recepción de ubicaciones");
-
-            LocationServices.FusedLocationApi.requestLocationUpdates(
-                    apiClient, locRequest, MapsActivity.this);
-        }
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        //Se ha producido un error que no se puede resolver automáticamente
-        //y la conexión con los Google Play Services no se ha establecido.
-
-        Log.e(LOGTAG, "Error grave al conectar con Google Play Services");
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        //Conectado correctamente a Google Play Services
-
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    PETICION_PERMISO_LOCALIZACION);
-        } else {
-
-            Location lastLocation =
-                    LocationServices.FusedLocationApi.getLastLocation(apiClient);
-
-            //updateUI(lastLocation);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        //Se ha interrumpido la conexión con Google Play Services
-
-        Log.e(LOGTAG, "Se ha interrumpido la conexión con Google Play Services");
-    }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PETICION_PERMISO_LOCALIZACION) {
+        if (requestCode == REQUEST_TO_LOCALIZATION_DEVICE) {
             if (grantResults.length == 1
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-                //Permiso concedido
-
-                @SuppressWarnings("MissingPermission")
-                Location lastLocation =
-                        LocationServices.FusedLocationApi.getLastLocation(apiClient);
+                //Permission granted to get location
+                active = !active;
+                toggleLocationUpdates(active);
 
 
             } else {
-                //Permiso denegado:
-                //Deberíamos deshabilitar toda la funcionalidad relativa a la localización.
+                //Permission denied:
 
-                Log.e(LOGTAG, "Permiso denegado");
+
+                Log.e(LOGTAG, "Permission denied, check your app configuration please!!");
             }
         }
     }
@@ -276,28 +171,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case PETICION_CONFIG_UBICACION:
+            case REQUEST_CONFIG_LOCATION:
                 switch (resultCode) {
                     case Activity.RESULT_OK:
-                        startLocationUpdates();
+                        toggleLocationUpdates(true);
                         break;
                     case Activity.RESULT_CANCELED:
-                        Log.i(LOGTAG, "El usuario no ha realizado los cambios de configuración necesarios");
-                        //btnActualizar.setChecked(false);
+                        Log.i(LOGTAG, "User not make correct need configuration changes");
                         break;
                 }
                 break;
         }
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-        Log.i(LOGTAG, "Recibida nueva ubicación!");
-
-        //Mostramos la nueva ubicación recibida
-        //updateUI(location);
-
-        changeMarker(location.getLatitude(), location.getLongitude(), "Title");
     }
 }

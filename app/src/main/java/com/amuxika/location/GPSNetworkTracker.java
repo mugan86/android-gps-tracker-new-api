@@ -21,7 +21,8 @@ import com.google.android.gms.maps.model.LatLng;
 /***********************************
  * Created by anartzmugika on 26/9/16.
  */
-public class GPSNetworkTracker extends Service implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class GPSNetworkTracker extends Service implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     LatLng mLocation;
@@ -71,7 +72,7 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
     @Override
     public void onConnectionSuspended(int i) {
         Log.i(LOGSERVICE, "onConnectionSuspended " + i);
-
+        stopLocationUpdate();
     }
 
     @Override
@@ -82,6 +83,8 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
         Toast.makeText(this, location.getLatitude() +  " / " + location.getLongitude(), Toast.LENGTH_LONG).show();
         Intent i = new Intent("location_update");
         i.putExtra("coordinates",location.getLongitude()+" "+location.getLatitude());
+        i.putExtra("lng", location.getLongitude());
+        i.putExtra("lat", location.getLatitude());
         sendBroadcast(i);
 
     }
