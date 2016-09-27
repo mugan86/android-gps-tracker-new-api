@@ -44,6 +44,8 @@
             android:label="@string/title_activity_maps"/>
         <service android:name=".GPSNetworkTracker" android:process=":gps" />
         <service android:name=".BoundService" />
+        <receiver android:name=".LocationReceiver" >
+        </receiver>
     </application>
 
 </manifest>
