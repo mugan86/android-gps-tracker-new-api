@@ -18,9 +18,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
-/***********************************
+/***************************************************************************************************
  * Created by anartzmugika on 26/9/16.
- */
+ *
+ * GPS Tracker service to stablished our current location.
+ **************************************************************************************************/
 public class GPSNetworkTracker extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private LocationRequest mLocationRequest;
@@ -47,7 +49,7 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
 
     @Override
     public void onConnected(Bundle bundle) {
-        Log.i(LOGSERVICE, "onConnected: " + bundle);
+        Log.i(LOGSERVICE, "onConnected");
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -63,9 +65,7 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
         if (l != null) {
             Log.i(LOGSERVICE, "lat " + l.getLatitude());
             Log.i(LOGSERVICE, "lng " + l.getLongitude());
-
         }
-
         startLocationUpdate();
     }
 
@@ -79,8 +79,10 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
     public void onLocationChanged(Location location) {
         Log.i(LOGSERVICE, "lat " + location.getLatitude());
         Log.i(LOGSERVICE, "lng " + location.getLongitude());
+
         mLocation = (new LatLng(location.getLatitude(), location.getLongitude()));
-        Toast.makeText(this, location.getLatitude() +  " / " + location.getLongitude(), Toast.LENGTH_LONG).show();
+
+        //Send change location info to LocationReceiver
         Intent i = new Intent("location_update");
         i.putExtra("coordinates",location.getLongitude()+" "+location.getLatitude());
         i.putExtra("lng", location.getLongitude());
@@ -92,7 +94,7 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i(LOGSERVICE, "onDestroy - Estou sendo destruido ");
+        Log.i(LOGSERVICE, "onDestroy - Stop location updates ");
         stopLocationUpdate();
 
     }
@@ -111,11 +113,12 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
     }
 
     private void initLocationRequest() {
+
+        //Set location request properties, interval 5seconds with high accuracy
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
     }
 
     private void startLocationUpdate() {
