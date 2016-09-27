@@ -41,20 +41,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //Return from GPS Network Tracker localization info
         if(broadcastReceiver == null){
-            broadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-
-                    System.out.println("Datos recibidos...");
-
-                    changeMarker(Double.parseDouble(intent.getExtras().get("lat").toString()),
-                            Double.parseDouble(intent.getExtras().get("lng").toString()), "My location");
-                    Toast.makeText(MapsActivity.this, intent.getExtras().get("coordinates").toString(), Toast.LENGTH_LONG).show();
-                    System.out.println("Current location " + intent.getExtras().get("coordinates").toString());
-
-
-                }
-            };
+            broadcastReceiver = new LocationReceiver();
         }
         registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
     }
