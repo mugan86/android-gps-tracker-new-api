@@ -30,6 +30,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final int REQUEST_TO_LOCALIZATION_DEVICE = 101;
     private static final int REQUEST_CONFIG_LOCATION = 201;
+    private Intent intent;
+    private ToggleButton updateButton;
 
 
     @Override
@@ -62,7 +64,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final ToggleButton updateButton = (ToggleButton) findViewById(R.id.updateButton);
+        updateButton = (ToggleButton) findViewById(R.id.updateButton);
 
         active = false;
         updateButton.setChecked(active);
@@ -71,6 +73,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        intent = new Intent(MapsActivity.this, GPSNetworkTracker.class);
 
 
         updateButton.setOnClickListener(new View.OnClickListener() {
@@ -98,7 +102,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void toggleLocationUpdates(boolean enable) {
-        Intent intent = new Intent(MapsActivity.this, GPSNetworkTracker.class);
+
         if (enable) {
 
             //enableLocationUpdates();
@@ -145,6 +149,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         if(broadcastReceiver != null){
             unregisterReceiver(broadcastReceiver);
         }
+        Toast.makeText(getApplicationContext(), "Stop service...", Toast.LENGTH_LONG).show();
+        stopService(intent);
     }
 
 
@@ -156,6 +162,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 //Permission granted to get location
                 active = !active;
+                //updateButton.setT
                 toggleLocationUpdates(active);
 
 
