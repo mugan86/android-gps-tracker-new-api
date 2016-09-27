@@ -23,7 +23,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap mMap;
     private boolean active;
-    private BroadcastReceiver broadcastReceiver;
+    private LocationReceiver broadcastReceiver;
     private static final String LOGTAG = "android-location";
 
     private static final int REQUEST_TO_LOCALIZATION_DEVICE = 101;
