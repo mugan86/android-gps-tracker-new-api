@@ -1,11 +1,15 @@
 package com.amuxika.location;
 
-import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -33,15 +37,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
 
+
         //Return from GPS Network Tracker localization info (Need to register receiver in manifest)
-        if(broadcastReceiver == null){
+        if (broadcastReceiver == null) {
             broadcastReceiver = new LocationReceiver();
         }
-        registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
+        registerReceiver(broadcastReceiver, new IntentFilter("location_update"));
     }
 
     @Override
@@ -76,8 +80,18 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             REQUEST_TO_LOCALIZATION_DEVICE);
                 } else {
 
-                    active = !active;
-                    toggleLocationUpdates(active);
+                    if (CheckGpsStatus(MapsActivity.this)) {
+                        active = !active;
+                        updateButton.setChecked(true);
+                        toggleLocationUpdates(active);
+                    } else {
+                        String message_title = "Location configuration";
+                        String message = "Active GPS to check your current location. ";
+                        String config_btn = "Configurate";
+                        showSettingsAlert(message_title, message, config_btn);
+                        updateButton.setChecked(false);
+                    }
+
                 }
 
             }
@@ -104,6 +118,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     /***********************************************************************************************
      * Default location load when start app
+     *
      * @param googleMap: Map object to add markers and info
      **********************************************************************************************/
     @Override
@@ -112,8 +127,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         changeMarker(-34, 151, "Marker in Sydney");
     }
 
-    public void changeMarker(double lat, double lng, String title)
-    {
+    public void changeMarker(double lat, double lng, String title) {
         // Add a marker in Sydney and move the camera
         LatLng select_loc = new LatLng(lat, lng);
         mMap.addMarker(new MarkerOptions().position(select_loc).title(title));
@@ -123,7 +137,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(broadcastReceiver != null){
+        if (broadcastReceiver != null) {
             unregisterReceiver(broadcastReceiver);
         }
         Toast.makeText(getApplicationContext(), "Stop service...", Toast.LENGTH_LONG).show();
@@ -153,19 +167,65 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**********************************************************
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CONFIG_LOCATION:
-                switch (resultCode) {
-                    case Activity.RESULT_OK:
-                        toggleLocationUpdates(true);
-                        break;
-                    case Activity.RESULT_CANCELED:
-                        Log.i(LOGTAG, "User not make correct need configuration changes");
-                        break;
-                }
-                break;
-        }
-    }***/
+     * @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+     * switch (requestCode) {
+     * case REQUEST_CONFIG_LOCATION:
+     * switch (resultCode) {
+     * case Activity.RESULT_OK:
+     * toggleLocationUpdates(true);
+     * break;
+     * case Activity.RESULT_CANCELED:
+     * Log.i(LOGTAG, "User not make correct need configuration changes");
+     * break;
+     * }
+     * break;
+     * }
+     * }
+     ***/
+
+    public static boolean CheckGpsStatus(Context context) {
+
+        LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    public void showSettingsAlert(String message_title, String message, String config_btn) {
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+
+        // Setting Dialog Title
+        alertDialog.setTitle(message_title);
+
+        // Setting Dialog Message
+        alertDialog.setMessage(message);
+
+        // On pressing Settings button
+        alertDialog.setPositiveButton(config_btn, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                //mContext.startActivity(intent);
+                startActivityForResult(intent, 0);
+                overridePendingTransition(0, 0);
+            }
+        });
+
+        // on pressing cancel button
+        alertDialog.setNegativeButton("Ez dut nahi nire kokapena erabili", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                System.out.println("OUR LOCATION NOT FOUND, USE EIBAR LOCATION");
+
+                dialog.cancel();
+
+
+                intent = getIntent();
+                finish();
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+
+            }
+        });
+
+        // Showing Alert Message
+        alertDialog.show();
+    }
 }
