@@ -16,12 +16,15 @@ public class LocationReceiver extends BroadcastReceiver{
 
         System.out.println("Data receive!...");
 
+        sendDataToCurrentActivity(Double.parseDouble(intent.getExtras().get("lat").toString()),
+                Double.parseDouble(intent.getExtras().get("lng").toString()), context);
 
-        ((MapsActivity)context).changeMarker(Double.parseDouble(intent.getExtras().get("lat").toString()),
-                Double.parseDouble(intent.getExtras().get("lng").toString()), "My location");
-        Toast.makeText(context, intent.getExtras().get("coordinates").toString(), Toast.LENGTH_LONG).show();
         System.out.println("Current location " + intent.getExtras().get("coordinates").toString());
 
+    }
 
+    public void sendDataToCurrentActivity(double lat, double lng, Context context)
+    {
+        if (context.getClass() == MapsActivity.class) ((MapsActivity)context).changeMarker(lat, lng, "My location");
     }
 }
