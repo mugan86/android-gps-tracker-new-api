@@ -16,6 +16,8 @@ import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.github.clans.fab.FloatingActionButton;
+import com.github.clans.fab.FloatingActionMenu;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -35,6 +37,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Intent intent;
     private ToggleButton updateButton;
 
+    //Map options with floating action menu
+    private FloatingActionMenu map_options_FloatingActionMenu;
+    private FloatingActionButton satelliteFloatingActionButtonItem, hybridFloatingActionButtonItem, roadmapFloatingActionButtonItem, normalFloatingActionButtonItem;
+
 
     @Override
     public void onResume() {
@@ -53,18 +59,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        updateButton = (ToggleButton) findViewById(R.id.updateButton);
-
-        active = false;
-        updateButton.setChecked(active);
-
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        initializeComponents();
 
         intent = new Intent(MapsActivity.this, GPSNetworkTracker.class);
-
 
         updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,27 +88,73 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         showSettingsAlert(message_title, message, config_btn);
                         updateButton.setChecked(false);
                     }
-
                 }
+            }
+        });
 
+        satelliteFloatingActionButtonItem.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                selectMapType(1);
+                map_options_FloatingActionMenu.close(true);
+
+            }
+        });
+        hybridFloatingActionButtonItem.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                selectMapType(3);
+                map_options_FloatingActionMenu.close(true);
+            }
+        });
+        roadmapFloatingActionButtonItem.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                selectMapType(2);
+                map_options_FloatingActionMenu.close(true);
+            }
+        });
+        normalFloatingActionButtonItem.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                selectMapType(4);
+                map_options_FloatingActionMenu.close(true);
             }
         });
 
     }
 
+    private void initializeComponents()
+    {
+
+        updateButton = (ToggleButton) findViewById(R.id.updateButton);
+
+        active = false;
+        updateButton.setChecked(active);
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        map_options_FloatingActionMenu  = (FloatingActionMenu) findViewById(R.id.map_options_FloatingActionMenu);
+        satelliteFloatingActionButtonItem = (FloatingActionButton) findViewById(R.id.satelliteFloatingActionButtonItem);
+        hybridFloatingActionButtonItem = (FloatingActionButton) findViewById(R.id.hybridFloatingActionButtonItem);
+        roadmapFloatingActionButtonItem = (FloatingActionButton) findViewById(R.id.roadmapFloatingActionButtonItem);
+        normalFloatingActionButtonItem = (FloatingActionButton) findViewById(R.id.normalFloatingActionButtonItem);
+    }
+
 
     private void toggleLocationUpdates(boolean enable) {
 
+        map_options_FloatingActionMenu.close(true);
         if (enable) {
 
             //enableLocationUpdates();
             startService(intent);
-
+            updateButton.setChecked(true);
             Toast.makeText(MapsActivity.this, "Buscando localizaciones...", Toast.LENGTH_LONG).show();
         } else {
             stopService(intent);
             //disableLocationUpdates();
             Toast.makeText(MapsActivity.this, "Dejando de buscar localizaciones...", Toast.LENGTH_LONG).show();
+            updateButton.setChecked(false);
         }
 
     }
@@ -125,7 +168,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         changeMarker(-34, 151, "Marker in Sydney");
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
+
+    private void selectMapType(int type)
+    {
+        switch (type)
+        {
+            case 1:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                break;
+            case 2:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                break;
+            case 3:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                break;
+            default:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
+    }
+
+
 
     public void changeMarker(double lat, double lng, String title) {
         // Add a marker in Sydney and move the camera
