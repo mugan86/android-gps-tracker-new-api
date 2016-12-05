@@ -281,7 +281,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 dialog.cancel();
 
 
-                intent = getIntent();
+                Intent intent = getIntent();
                 finish();
                 startActivity(intent);
                 overridePendingTransition(0, 0);
