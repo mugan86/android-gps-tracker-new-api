@@ -7,14 +7,14 @@ import android.widget.Toast;
 
 
 /*********************************************************
- * Created by anartzmugika on 27/9/16.
- */
+ * Created by anartzmugika on 27/9/16. Update 5/12/2016
+ ****************/
 public class LocationReceiver extends BroadcastReceiver{
 
     @Override
     public void onReceive(Context context, Intent intent) {
 
-        System.out.println("Datos recibidos...");
+        System.out.println("Data receive!...");
 
 
         ((MapsActivity)context).changeMarker(Double.parseDouble(intent.getExtras().get("lat").toString()),
