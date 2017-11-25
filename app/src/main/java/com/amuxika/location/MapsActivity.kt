@@ -12,30 +12,19 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
-import android.widget.ToggleButton
-import com.github.clans.fab.FloatingActionButton
-import com.github.clans.fab.FloatingActionMenu
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private var mMap: GoogleMap? = null
     private var active: Boolean = false
     private var broadcastReceiver: LocationReceiver? = null
-    private var updateButton: ToggleButton? = null
-
-    //Map options with floating action menu
-    private var map_options_FloatingActionMenu: FloatingActionMenu? = null
-    private var satelliteFloatingActionButtonItem: FloatingActionButton? = null
-    private var hybridFloatingActionButtonItem: FloatingActionButton? = null
-    private var roadmapFloatingActionButtonItem: FloatingActionButton? = null
-    private var normalFloatingActionButtonItem: FloatingActionButton? = null
-
+    private var mMap: GoogleMap? = null
     public override fun onResume() {
         super.onResume()
 
@@ -54,7 +43,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         initializeComponents()
 
 
-        updateButton!!.setOnClickListener {
+        updateButton.setOnClickListener {
             //Check localization permission
             if (ActivityCompat.checkSelfPermission(this@MapsActivity,
                     android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -100,7 +89,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun initializeComponents() {
 
-        updateButton = findViewById(R.id.updateButton) as ToggleButton
 
         active = false
         updateButton!!.isChecked = active
@@ -110,11 +98,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        map_options_FloatingActionMenu = findViewById(R.id.map_options_FloatingActionMenu) as FloatingActionMenu
-        satelliteFloatingActionButtonItem = findViewById(R.id.satelliteFloatingActionButtonItem) as FloatingActionButton
-        hybridFloatingActionButtonItem = findViewById(R.id.hybridFloatingActionButtonItem) as FloatingActionButton
-        roadmapFloatingActionButtonItem = findViewById(R.id.roadmapFloatingActionButtonItem) as FloatingActionButton
-        normalFloatingActionButtonItem = findViewById(R.id.normalFloatingActionButtonItem) as FloatingActionButton
     }
 
 
@@ -125,7 +108,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
             //enableLocationUpdates();
             startService(Intent(this@MapsActivity, GPSNetworkTracker::class.java))
-            updateButton!!.isChecked = true
+            updateButton.isChecked = true
             Toast.makeText(this@MapsActivity, "Buscando localizaciones...", Toast.LENGTH_LONG).show()
         } else {
             stopService(Intent(this@MapsActivity, GPSNetworkTracker::class.java))
