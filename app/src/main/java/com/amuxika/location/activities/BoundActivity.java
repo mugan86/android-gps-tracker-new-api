@@ -1,4 +1,4 @@
-package com.amuxika.location;
+package com.amuxika.location.activities;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,6 +10,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.amuxika.location.R;
+import com.amuxika.location.services.BoundService;
 
 /****************************************
  * Created by anartzmugika on 26/9/16.

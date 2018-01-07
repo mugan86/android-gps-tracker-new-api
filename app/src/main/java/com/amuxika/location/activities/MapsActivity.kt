@@ -1,10 +1,11 @@
-package com.amuxika.location
+package com.amuxika.location.activities
 
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.support.v4.app.ActivityCompat
@@ -12,6 +13,10 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
+import com.amuxika.location.R
+import com.amuxika.location.receivers.LocationReceiver
+import com.amuxika.location.services.LocationService
+import com.amuxika.location.services.API25OrMoreLocationService
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -107,11 +112,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (enable) {
 
             //enableLocationUpdates();
-            startService(Intent(this@MapsActivity, GPSNetworkTracker::class.java))
+            // Check if we're running on Android 5.0 or higher
+            if (Build.VERSION.SDK_INT >= 25) {
+                // Call some material design APIs here
+                startService(Intent(this@MapsActivity, API25OrMoreLocationService::class.java))
+            } else {
+                startService(Intent(this@MapsActivity, LocationService::class.java))
+            }
+
             updateButton.isChecked = true
             Toast.makeText(this@MapsActivity, "Buscando localizaciones...", Toast.LENGTH_LONG).show()
         } else {
-            stopService(Intent(this@MapsActivity, GPSNetworkTracker::class.java))
+            if (Build.VERSION.SDK_INT >= 25) {
+                // Call some material design APIs here
+                println("LOCATION SERVICE")
+                stopService(Intent(this@MapsActivity, API25OrMoreLocationService::class.java))
+            } else {
+                println("GPSNETWORK TRACKER SERVICE")
+                stopService(Intent(this@MapsActivity, LocationService::class.java))
+            }
             //disableLocationUpdates();
             Toast.makeText(this@MapsActivity, "Dejando de buscar localizaciones...", Toast.LENGTH_LONG).show()
             updateButton!!.isChecked = false
@@ -155,7 +174,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             unregisterReceiver(broadcastReceiver)
         }
         Toast.makeText(applicationContext, "Stop service...", Toast.LENGTH_LONG).show()
-        stopService(Intent(this@MapsActivity, GPSNetworkTracker::class.java))
+        if (Build.VERSION.SDK_INT >= 25) {
+            // Call some material design APIs here
+            println("LOCATION SERVICE")
+            stopService(Intent(this@MapsActivity, API25OrMoreLocationService::class.java))
+        } else {
+            println("GPSNETWORK TRACKER SERVICE")
+            stopService(Intent(this@MapsActivity, LocationService::class.java))
+        }
     }
 
 
