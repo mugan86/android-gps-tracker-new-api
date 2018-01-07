@@ -31,7 +31,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapsActivity"
+            android:name=".activities.MapsActivity"
             android:label="@string/title_activity_maps">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,11 +40,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".BoundActivity"
+            android:name=".activities.BoundActivity"
             android:label="@string/title_activity_maps"/>
-        <service android:name=".GPSNetworkTracker" android:process=":gps" />
-        <service android:name=".BoundService" />
-        <receiver android:name=".LocationReceiver" />
+        <service android:name=".services.LocationService" android:process=":gps" />
+        <service android:name=".services.BoundService" />
+        <service android:name=".services.API25OrMoreLocationService" />
+
+        <receiver android:name=".receivers.LocationReceiver" />
     </application>
 
 </manifest>
