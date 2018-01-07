@@ -1,4 +1,4 @@
-package com.amuxika.location;
+package com.amuxika.location.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -15,20 +15,19 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 
 /***************************************************************************************************
- * Created by anartzmugika on 26/9/16.
+ * Created by Anartz Mugika on 26/9/16.
  *
- * GPS Tracker service to stablished our current location.
+ * GPS Tracker service to stablished our current location. Use in versions < 25
  **************************************************************************************************/
-public class GPSNetworkTracker extends Service implements GoogleApiClient.ConnectionCallbacks,
+@SuppressWarnings("deprecation")
+public class LocationService extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
-    LatLng mLocation;
     private static final String LOGSERVICE = "#######";
-
+    private static final String LOCATION_UPDATE = "location_update";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -44,7 +43,6 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
             mGoogleApiClient.connect();
         return START_STICKY;
     }
-
 
     @Override
     public void onConnected(Bundle bundle) {
@@ -79,13 +77,18 @@ public class GPSNetworkTracker extends Service implements GoogleApiClient.Connec
         Log.i(LOGSERVICE, "lat " + location.getLatitude());
         Log.i(LOGSERVICE, "lng " + location.getLongitude());
 
-        mLocation = (new LatLng(location.getLatitude(), location.getLongitude()));
+        //mLocation = (new LatLng(location.getLatitude(), location.getLongitude()));
 
         //Send change location info to LocationReceiver
-        Intent i = new Intent("location_update");
+        /*Intent i = new Intent( "location_update");
         i.putExtra("coordinates",location.getLongitude()+" "+location.getLatitude());
         i.putExtra("lng", location.getLongitude());
         i.putExtra("lat", location.getLatitude());
+        sendBroadcast(i);*/
+
+        //Send change location info to LocationReceiver
+        Intent i = new Intent(LOCATION_UPDATE);
+        i.putExtra(LOCATION_UPDATE, location);
         sendBroadcast(i);
 
     }

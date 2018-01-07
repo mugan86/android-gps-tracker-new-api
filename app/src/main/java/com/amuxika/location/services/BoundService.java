@@ -1,4 +1,4 @@
-package com.amuxika.location;
+package com.amuxika.location.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -61,7 +61,7 @@ public class BoundService extends Service {
     }
 
     public class MyBinder extends Binder {
-        BoundService getService() {
+        public BoundService getService() {
             return BoundService.this;
         }
     }
